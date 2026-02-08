@@ -15,7 +15,7 @@ class MacVGChat {
         this.isTyping = false;
         this.onlineUsers = new Map(); // username -> lastSeen
         this.messageQueue = [];
-        this.supabase = window.supabaseClient;
+        this.supabase = window.supabase;
         this.gameRequestChannel = null;
         this.messageChannel = null;
         
