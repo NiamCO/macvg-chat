@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacVG Chat</title>
+    <link rel="icon" type="image/png" href="https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Username Entry Modal -->
+    <div id="usernameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-gamepad"></i> Welcome to MacVG Chat</h2>
+            </div>
+            <div class="modal-body">
+                <div class="logo-container">
+                    <div class="logo">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Enter Your Username</h3>
+                    <p class="subtitle">This will be your identity in the chat</p>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="usernameInput" placeholder="Choose a username..." maxlength="20" autocomplete="off">
+                    <div class="input-hint">
+                        <i class="fas fa-info-circle"></i> Usernames are case-sensitive
+                    </div>
+                </div>
+                
+                <div class="admin-hint">
+                    <i class="fas fa-crown"></i> Special admin features are hidden...
+                </div>
+                
+                <button id="joinChatBtn" class="join-btn">
+                    <i class="fas fa-rocket"></i> Join MacVG Chat
+                </button>
+                
+                <div class="chat-rules">
+                    <h4><i class="fas fa-shield-alt"></i> Chat Rules</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Be respectful to other players</li>
+                        <li><i class="fas fa-check-circle"></i> No spam or excessive messages</li>
+                        <li><i class="fas fa-check-circle"></i> Have fun gaming!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Request Modal -->
+    <div id="gameRequestModal" class="modal hidden">
+        <div class="modal-content game-request-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-gamepad"></i> Game Invitation</h2>
+            </div>
+            <div class="modal-body">
+                <div class="request-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <p id="requestMessage" class="request-message"></p>
+                
+                <div class="game-info">
+                    <i class="fas fa-dice"></i>
+                    <span id="gameNameDisplay"></span>
+                </div>
+                
+                <div class="request-actions">
+                    <button id="acceptRequestBtn" class="btn-accept">
+                        <i class="fas fa-check"></i> Accept & Play
+                    </button>
+                    <button id="declineRequestBtn" class="btn-decline">
+                        <i class="fas fa-times"></i> Decline
+                    </button>
+                </div>
+                
+                <div class="request-note">
+                    <i class="fas fa-info-circle"></i> Accepting will search for the game on MacVG
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Sent Modal -->
+    <div id="requestSentModal" class="modal hidden">
+        <div class="modal-content request-sent-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-paper-plane"></i> Request Sent</h2>
+            </div>
+            <div class="modal-body">
+                <div class="sent-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p id="sentMessage"></p>
+                <button id="closeSentModalBtn" class="btn-close">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div id="chatContainer">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="chat-logo">
+                    <i class="fas fa-comments"></i>
+                    <h1>MacVG Chat</h1>
+                </div>
+                <div class="online-indicator">
+                    <span class="dot"></span>
+                    <span id="onlineCount">0</span> online
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="notificationsBtn" class="icon-btn" title="Toggle notifications">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button id="settingsBtn" class="icon-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div id="messagesContainer">
+            <div class="welcome-message">
+                <div class="welcome-icon">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h3>Welcome to MacVG Chat!</h3>
+                <p>Connect with fellow gamers, share tips, and find players for your favorite games.</p>
+                <div class="welcome-tip">
+                    <i class="fas fa-lightbulb"></i> Tip: Click on a username to send a game request
+                </div>
+            </div>
+            <!-- Messages will be inserted here -->
+        </div>
+
+        <!-- Typing Indicator -->
+        <div id="typingIndicator" class="typing-indicator hidden">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span class="typing-text">Someone is typing...</span>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Type your message here..." maxlength="500" autocomplete="off">
+                <button id="sendMessageBtn" class="send-btn" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-footer">
+                <span id="charCount">0/500</span>
+                <div class="input-actions">
+                    <button id="emojiBtn" class="action-btn" title="Emojis">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    <button id="gameRequestBtn" class="action-btn" title="Send game request to user" disabled>
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Online Sidebar -->
+        <div id="usersOnline" class="users-online">
+            <div class="users-header">
+                <h3><i class="fas fa-users"></i> Online Now</h3>
+                <button id="closeUsersBtn" class="close-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div id="usersList" class="users-list">
+                <div class="user-item admin-user">
+                    <span class="user-badge"><i class="fas fa-crown"></i></span>
+                    <span class="username">Niam - Creator</span>
+                    <span class="user-status active"></span>
+                </div>
+                <!-- Users will be added here -->
+            </div>
+            <div class="users-footer">
+                <div class="total-users">
+                    <i class="fas fa-globe"></i>
+                    <span id="totalUsers">1</span> users total
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="notifications.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
