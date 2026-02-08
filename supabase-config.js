@@ -7,14 +7,14 @@
 // Your Supabase project URL and anon key
 // Get these from: Supabase Dashboard → Settings → API
 const SUPABASE_URL = 'https://atojfbqwkvkleisxiujv.supabase.co'; // ← REPLACE THIS
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0b2pmYnF3a3ZrbGVpc3hpdWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NzY3ODIsImV4cCI6MjA4NjE1Mjc4Mn0.jiHItdZVtQuu0-S3C-Z2ifM0MUbpiaAdvkUJKGOW2As'; // ← REPLACE THIS
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0b2pmYnF3a3ZrbGVpc3hpdWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NzY3ODIsImV4cCI6MjA4NjE1Mjc4Mn0.jiHItdZVtQuu0-S3C-Z2ifM0MUbpiaAdvkUJKGOW2As';// ← REPLACE THIS
 
 // Initialize Supabase client
-let supabase;
+let supabaseClient;
 
 try {
     // Create Supabase client
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         realtime: {
             params: {
                 eventsPerSecond: 10
@@ -29,7 +29,7 @@ try {
     console.log('⚠️ Please check your Supabase URL and Anon Key');
     
     // Create a mock supabase object to prevent errors during development
-    supabase = {
+    supabaseClient = {
         from: () => ({
             select: () => Promise.resolve({ data: [], error: null }),
             insert: () => Promise.resolve({ data: [], error: null }),
@@ -44,25 +44,12 @@ try {
 }
 
 // ==============================================
-// SUPABASE SETUP INSTRUCTIONS:
+// TEST CONNECTION FUNCTION
 // ==============================================
-// 1. Go to your Supabase project dashboard
-// 2. Click on "Settings" (gear icon)
-// 3. Click on "API"
-// 4. Copy these two values:
-//    - "Project URL" → Replace SUPABASE_URL above
-//    - "anon public" key → Replace SUPABASE_ANON_KEY above
-//
-// Example:
-// const SUPABASE_URL = 'https://xyzabc123.supabase.co';
-// const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-// ==============================================
-
-// Test connection function
 async function testSupabaseConnection() {
     if (!SUPABASE_URL.includes('your-project-id')) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('chat_messages')
                 .select('*')
                 .limit(1);
@@ -85,7 +72,9 @@ async function testSupabaseConnection() {
     }
 }
 
-// Function to check if Supabase is properly configured
+// ==============================================
+// CHECK IF SUPABASE IS CONFIGURED
+// ==============================================
 function isSupabaseConfigured() {
     const isConfigured = !SUPABASE_URL.includes('your-project-id') && 
                         !SUPABASE_ANON_KEY.includes('your-anon-key-here');
@@ -98,8 +87,10 @@ function isSupabaseConfigured() {
     return isConfigured;
 }
 
-// Export for use in other files
-window.supabaseClient = supabase;
+// ==============================================
+// EXPORT FOR USE IN OTHER FILES
+// ==============================================
+window.supabase = supabaseClient; // Changed from window.supabaseClient
 window.testSupabaseConnection = testSupabaseConnection;
 window.isSupabaseConfigured = isSupabaseConfigured;
 
