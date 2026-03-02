@@ -368,57 +368,110 @@ class MacVGChat {
         this.updateUserLastSeen(messageData.user_id);
     }
     
-    async sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const message = messageInput.value.trim();
+   async sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Apply swearing filter (ALWAYS ON)
+    if (window.swearingFilter) {
+        const filterResult = window.swearingFilter.checkMessage(
+            message, 
+            this.currentUsername, 
+            this.isAdmin
+        );
         
-        if (!message) return;
-        
-        // Request notification permission on first message
-        if (this.lastMessageTime === 0 && window.notificationManager) {
-            if (window.notificationManager.permission === 'default') {
-                await window.notificationManager.requestPermission();
-            }
+        if (!filterResult.allowed) {
+            // Blocked message
+            alert(`🚫 ${filterResult.warning}`);
+            messageInput.value = '';
+            this.updateCharCount();
+            return;
         }
         
-        // Clear input
-        messageInput.value = '';
-        this.updateCharCount();
-        
-        // Send to Supabase
-        if (this.supabase) {
-            try {
-                const messageData = {
-                    user_id: this.currentUsername,
-                    display_name: this.currentUser,
-                    is_admin: this.isAdmin,
-                    message: message,
-                    created_at: new Date().toISOString()
-                };
-                
-                const { error } = await this.supabase
-                    .from('chat_messages')
-                    .insert([messageData]);
-                
-                if (error) throw error;
-                
-                // Update last message time
-                this.lastMessageTime = Date.now();
-                
-                // Update typing status
-                this.stopTyping();
-                
-                // Update online status
-                this.updateUserOnlineStatus();
-                
-            } catch (error) {
-                console.error('❌ Error sending message:', error);
-                // Store in queue for retry
-                this.messageQueue.push({ message, timestamp: Date.now() });
-                this.showError('Failed to send message. Will retry...');
-            }
+        if (filterResult.warning) {
+            // Show warning but send censored version
+            this.showFilterWarning(filterResult.warning);
+            // Use censored message
+            messageInput.value = filterResult.filteredMessage;
         }
     }
+    
+    // Request notification permission on first message
+    if (this.lastMessageTime === 0 && window.notificationManager) {
+        if (window.notificationManager.permission === 'default') {
+            await window.notificationManager.requestPermission();
+        }
+    }
+    
+    // Get the message to send (might be censored)
+    const messageToSend = messageInput.value.trim();
+    messageInput.value = '';
+    this.updateCharCount();
+    
+    // Don't send empty messages
+    if (!messageToSend) return;
+    
+    // Send to Supabase
+    if (this.supabase) {
+        try {
+            const messageData = {
+                user_id: this.currentUsername,
+                display_name: this.currentUser,
+                is_admin: this.isAdmin,
+                message: messageToSend,
+                created_at: new Date().toISOString()
+            };
+            
+            const { error } = await this.supabase
+                .from('chat_messages')
+                .insert([messageData]);
+            
+            if (error) throw error;
+            
+            this.lastMessageTime = Date.now();
+            this.stopTyping();
+            this.updateUserOnlineStatus();
+            
+        } catch (error) {
+            console.error('❌ Error sending message:', error);
+            this.messageQueue.push({ message: messageToSend, timestamp: Date.now() });
+            this.showError('Failed to send message. Will retry...');
+        }
+    }
+}
+
+    showFilterWarning(warning) {
+    // Create warning message
+    const messagesContainer = document.getElementById('messagesContainer');
+    
+    const warningDiv = document.createElement('div');
+    warningDiv.style.cssText = `
+        background: rgba(255, 122, 0, 0.1);
+        border: 1px solid #ff7a00;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px 0;
+        text-align: center;
+        color: #ffcc00;
+        font-size: 13px;
+        animation: fadeIn 0.3s ease;
+    `;
+    warningDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ff7a00;"></i>
+        ${warning}
+    `;
+    
+    messagesContainer.appendChild(warningDiv);
+    
+    // Remove after 4 seconds
+    setTimeout(() => {
+        if (warningDiv.parentNode) {
+            warningDiv.remove();
+        }
+    }, 4000);
+}
     
     handleTyping() {
         if (!this.isTyping) {
